@@ -1,0 +1,23 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: var(--el-bg-color-page);
+  color: var(--el-text-color-primary);
+}
+
+main {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 0 12px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+h1 {
+  margin: 0;
+  font-size: 18px;
+}

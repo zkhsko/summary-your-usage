@@ -1,0 +1,10 @@
+{
+  "http": {
+    "host": "127.0.0.1",
+    "port": 8080
+  },
+  "database": {
+    "driver": "sqlite",
+    "dsn": "file:app.db?_pragma=busy_timeout(5000)&_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)"
+  }
+}

@@ -1,0 +1,134 @@
+<script setup>
+import { nextTick, onMounted, reactive, ref } from 'vue'
+import {
+  ElButton, ElCard, ElConfigProvider, ElDialog, ElForm, ElFormItem, ElInput,
+  ElMessage, ElMessageBox, ElTable, ElTableColumn, vLoading,
+} from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import { usersApi } from './api/users'
+
+const users = ref([])
+const busy = ref(false)
+const dialogVisible = ref(false)
+const editingID = ref(null)
+const formRef = ref()
+const form = reactive({ name: '', email: '' })
+const rules = {
+  name: [{ required: true, whitespace: true, message: '请输入姓名', trigger: 'blur' }],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' },
+  ],
+}
+
+async function loadUsers() {
+  busy.value = true
+  try {
+    users.value = await usersApi.list()
+  } catch (error) {
+    ElMessage.error(error.message)
+  } finally {
+    busy.value = false
+  }
+}
+
+async function openForm(user) {
+  editingID.value = user?.id ?? null
+  form.name = user?.name ?? ''
+  form.email = user?.email ?? ''
+  dialogVisible.value = true
+  await nextTick()
+  formRef.value?.clearValidate()
+}
+
+async function saveUser() {
+  if (busy.value || !formRef.value) return
+  form.name = form.name.trim()
+  form.email = form.email.trim().toLowerCase()
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid || busy.value) return
+  busy.value = true
+  try {
+    if (editingID.value === null) await usersApi.create(form)
+    else await usersApi.update(editingID.value, form)
+    dialogVisible.value = false
+    ElMessage.success('已保存')
+    await loadUsers()
+  } catch (error) {
+    ElMessage.error(error.message)
+  } finally {
+    busy.value = false
+  }
+}
+
+async function deleteUser(user) {
+  try {
+    await ElMessageBox.confirm(`确定删除用户「${user.name}」吗？`, '删除用户', {
+      type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消',
+    })
+  } catch {
+    return
+  }
+  busy.value = true
+  try {
+    await usersApi.delete(user.id)
+    ElMessage.success('已删除')
+    await loadUsers()
+  } catch (error) {
+    ElMessage.error(error.message)
+  } finally {
+    busy.value = false
+  }
+}
+
+onMounted(loadUsers)
+</script>
+
+<template>
+  <el-config-provider :locale="zhCn">
+    <main>
+      <el-card shadow="never">
+        <template #header>
+          <div class="toolbar">
+            <h1>用户管理</h1>
+            <el-button type="primary" :disabled="busy" @click="openForm()">新增用户</el-button>
+          </div>
+        </template>
+        <el-table v-loading="busy" :data="users" row-key="id" border empty-text="暂无用户">
+          <el-table-column prop="id" label="ID" width="70" />
+          <el-table-column prop="name" label="姓名" min-width="120" show-overflow-tooltip />
+          <el-table-column prop="email" label="邮箱" min-width="200" show-overflow-tooltip />
+          <el-table-column label="操作" width="130" fixed="right">
+            <template #default="{ row }">
+              <el-button link type="primary" :disabled="busy" @click="openForm(row)">编辑</el-button>
+              <el-button link type="danger" :disabled="busy" @click="deleteUser(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-card>
+
+      <el-dialog
+        v-model="dialogVisible"
+        :title="editingID === null ? '新增用户' : '编辑用户'"
+        width="min(420px, calc(100vw - 32px))"
+        destroy-on-close
+        :close-on-click-modal="!busy"
+        :close-on-press-escape="!busy"
+        :show-close="!busy"
+      >
+        <el-form ref="formRef" :model="form" :rules="rules" label-position="top" :disabled="busy" @submit.prevent="saveUser">
+          <el-form-item label="姓名" prop="name">
+            <el-input v-model="form.name" placeholder="请输入姓名" :maxlength="100" autocomplete="name" />
+          </el-form-item>
+          <el-form-item label="邮箱" prop="email">
+            <el-input v-model="form.email" placeholder="请输入邮箱地址" :maxlength="254" autocomplete="email" @keyup.enter="saveUser" />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button :disabled="busy" @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="busy" @click="saveUser">保存</el-button>
+        </template>
+      </el-dialog>
+    </main>
+  </el-config-provider>
+</template>

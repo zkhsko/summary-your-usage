@@ -1,0 +1,11 @@
+-- +goose Up
+CREATE TABLE users (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(254) NOT NULL UNIQUE,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+-- +goose Down
+DROP TABLE users;

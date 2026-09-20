@@ -1,0 +1,13 @@
+.env
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+bin/
+ui/node_modules/
+ui/dist/
+.DS_Store
+.idea/
+.playwright-cli/
+test-results/
+coverage.out
