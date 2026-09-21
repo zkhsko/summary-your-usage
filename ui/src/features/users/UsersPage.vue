@@ -1,8 +1,8 @@
 <script setup>
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import {
-  ElButton, ElCard, ElDialog, ElForm, ElFormItem, ElInput, ElMessage,
-  ElMessageBox, ElRow, ElTable, ElTableColumn, ElText, vLoading,
+  ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElMessage,
+  ElMessageBox, ElRow, ElSpace, ElTable, ElTableColumn, ElText, vLoading,
 } from 'element-plus'
 import { usersApi } from './api'
 
@@ -84,14 +84,12 @@ onMounted(loadUsers)
 </script>
 
 <template>
-  <el-card shadow="never">
-    <template #header>
-      <el-row justify="space-between" align="middle">
-        <el-text size="large" tag="b">用户管理</el-text>
-        <el-button type="primary" :disabled="busy" @click="openForm()">新增用户</el-button>
-      </el-row>
-    </template>
-    <el-table v-loading="busy" :data="users" row-key="id" border empty-text="暂无用户">
+  <el-space direction="vertical" fill :size="24" style="width: 100%;">
+    <el-row justify="space-between" align="middle">
+      <el-text size="large" tag="b">用户管理</el-text>
+      <el-button type="primary" :disabled="busy" @click="openForm()">新增用户</el-button>
+    </el-row>
+    <el-table v-loading="busy" :data="users" row-key="id" empty-text="暂无用户">
       <el-table-column prop="id" label="ID" width="70" />
       <el-table-column prop="name" label="姓名" min-width="120" show-overflow-tooltip />
       <el-table-column prop="email" label="邮箱" min-width="200" show-overflow-tooltip />
@@ -102,7 +100,7 @@ onMounted(loadUsers)
         </template>
       </el-table-column>
     </el-table>
-  </el-card>
+  </el-space>
 
   <el-dialog
     v-model="dialogVisible"

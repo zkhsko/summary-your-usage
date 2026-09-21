@@ -16,15 +16,9 @@ defineEmits(['select'])
         <el-row justify="space-between" align="middle" style="height: 100%;">
           <el-text size="large" tag="b">Summary Your Usage</el-text>
           <el-space size="large">
-            <el-menu
-              mode="horizontal"
-              :ellipsis="false"
-              :default-active="activeView"
-              style="border-bottom: none; background: transparent;"
-              @select="$emit('select', $event)"
-            >
+            <nav aria-label="主导航">
               <slot name="header-menu" />
-            </el-menu>
+            </nav>
             <el-avatar :size="32">U</el-avatar>
           </el-space>
         </el-row>
