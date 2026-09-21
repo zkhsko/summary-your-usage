@@ -78,38 +78,38 @@ func TestUserCRUDAndPersistence(t *testing.T) {
 	}
 	created := request(t, api, "POST", "/api/v1/users", `{"name":"  张三  ","email":"  Alice@Example.COM  "}`, 201)
 	user := decode[entity.User](t, created)
-	location := fmt.Sprintf("/api/v1/users/%d", user.ID)
-	if user.ID < 1 || user.Name != "张三" || user.Email != "alice@example.com" || user.CreatedAt.IsZero() || !user.CreatedAt.Equal(user.UpdatedAt) || created.Header().Get("Location") != location {
-		t.Fatalf("unexpected created user: %+v, Location: %s", user, created.Header().Get("Location"))
+	userPath := fmt.Sprintf("/api/v1/users/%d", user.Id)
+	if user.Id < 1 || user.Name != "张三" || user.Email != "alice@example.com" || user.CreatedAt.IsZero() || !user.CreatedAt.Equal(user.UpdatedAt) {
+		t.Fatalf("unexpected created user: %+v", user)
 	}
 	assertError(t, request(t, api, "POST", "/api/v1/users", `{"name":"重复","email":"ALICE@example.com"}`, 409), "email_exists")
 	other := decode[entity.User](t, request(t, api, "POST", "/api/v1/users", `{"name":"李四","email":"bob@example.com"}`, 201))
-	assertError(t, request(t, api, "PUT", location, `{"name":"不应保存","email":"BOB@example.com"}`, 409), "email_exists")
-	unchanged := decode[entity.User](t, request(t, api, "GET", location, "", 200))
+	assertError(t, request(t, api, "PUT", userPath, `{"name":"不应保存","email":"BOB@example.com"}`, 409), "email_exists")
+	unchanged := decode[entity.User](t, request(t, api, "GET", userPath, "", 200))
 	if unchanged != user {
 		t.Fatalf("failed update changed user: %+v, want %+v", unchanged, user)
 	}
-	updated := decode[entity.User](t, request(t, api, "PUT", location, `{"name":"  王五  ","email":"  NEW@example.com  "}`, 200))
-	if updated.ID != user.ID || updated.Name != "王五" || updated.Email != "new@example.com" || !updated.CreatedAt.Equal(user.CreatedAt) || updated.UpdatedAt.Before(user.UpdatedAt) {
+	updated := decode[entity.User](t, request(t, api, "PUT", userPath, `{"name":"  王五  ","email":"  NEW@example.com  "}`, 200))
+	if updated.Id != user.Id || updated.Name != "王五" || updated.Email != "new@example.com" || !updated.CreatedAt.Equal(user.CreatedAt) || updated.UpdatedAt.Before(user.UpdatedAt) {
 		t.Fatalf("unexpected updated user: %+v", updated)
 	}
 	if err := db.Close(); err != nil {
 		t.Fatal(err)
 	}
 	api, _ = openAPI(t, path)
-	persisted := decode[entity.User](t, request(t, api, "GET", location, "", 200))
+	persisted := decode[entity.User](t, request(t, api, "GET", userPath, "", 200))
 	if persisted != updated {
 		t.Fatalf("reopened database: %+v, want %+v", persisted, updated)
 	}
-	deleted := request(t, api, "DELETE", location, "", 204)
+	deleted := request(t, api, "DELETE", userPath, "", 204)
 	if deleted.Body.Len() != 0 {
 		t.Fatalf("delete response must have an empty body: %s", deleted.Body)
 	}
 	for _, method := range []string{"GET", "PUT", "DELETE"} {
-		assertError(t, request(t, api, method, location, `{"name":"不存在","email":"missing@example.com"}`, 404), "user_not_found")
+		assertError(t, request(t, api, method, userPath, `{"name":"不存在","email":"missing@example.com"}`, 404), "user_not_found")
 	}
 	remaining := decode[[]entity.User](t, request(t, api, "GET", "/api/v1/users", "", 200))
-	if len(remaining) != 1 || remaining[0].ID != other.ID {
+	if len(remaining) != 1 || remaining[0].Id != other.Id {
 		t.Fatalf("unexpected remaining users: %+v", remaining)
 	}
 }

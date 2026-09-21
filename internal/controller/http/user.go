@@ -3,7 +3,6 @@ package http
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"mime"
@@ -23,69 +22,68 @@ type userHandler struct {
 func (h *userHandler) list(w http.ResponseWriter, r *http.Request) {
 	result, err := h.users.List(r.Context())
 	if err != nil {
-		h.fail(w, r, err)
+		writeUserError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, result)
 }
 
 func (h *userHandler) get(w http.ResponseWriter, r *http.Request) {
-	id, ok := userID(w, r)
+	id, ok := userId(w, r)
 	if !ok {
 		return
 	}
 	user, err := h.users.Get(r.Context(), id)
 	if err != nil {
-		h.fail(w, r, err)
+		writeUserError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, user)
 }
 
 func (h *userHandler) create(w http.ResponseWriter, r *http.Request) {
-	input, ok := h.input(w, r)
+	input, ok := readUserInput(w, r)
 	if !ok {
 		return
 	}
 	user, err := h.users.Create(r.Context(), input)
 	if err != nil {
-		h.fail(w, r, err)
+		writeUserError(w, r, err)
 		return
 	}
-	w.Header().Set("Location", fmt.Sprintf("/api/v1/users/%d", user.ID))
 	writeJSON(w, http.StatusCreated, user)
 }
 
 func (h *userHandler) update(w http.ResponseWriter, r *http.Request) {
-	id, ok := userID(w, r)
+	id, ok := userId(w, r)
 	if !ok {
 		return
 	}
-	input, ok := h.input(w, r)
+	input, ok := readUserInput(w, r)
 	if !ok {
 		return
 	}
 	user, err := h.users.Update(r.Context(), id, input)
 	if err != nil {
-		h.fail(w, r, err)
+		writeUserError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, user)
 }
 
 func (h *userHandler) delete(w http.ResponseWriter, r *http.Request) {
-	id, ok := userID(w, r)
+	id, ok := userId(w, r)
 	if !ok {
 		return
 	}
 	if err := h.users.Delete(r.Context(), id); err != nil {
-		h.fail(w, r, err)
+		writeUserError(w, r, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *userHandler) input(w http.ResponseWriter, r *http.Request) (entity.UserInput, bool) {
+func readUserInput(w http.ResponseWriter, r *http.Request) (entity.UserInput, bool) {
 	contentType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil || contentType != "application/json" {
 		writeError(w, http.StatusUnsupportedMediaType, "unsupported_media_type", "请使用 application/json")
@@ -115,7 +113,7 @@ func (h *userHandler) input(w http.ResponseWriter, r *http.Request) (entity.User
 	return input, true
 }
 
-func (h *userHandler) fail(w http.ResponseWriter, r *http.Request, err error) {
+func writeUserError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, entity.ErrUserNotFound):
 		writeError(w, http.StatusNotFound, "user_not_found", "用户不存在")
@@ -129,7 +127,7 @@ func (h *userHandler) fail(w http.ResponseWriter, r *http.Request, err error) {
 	}
 }
 
-func userID(w http.ResponseWriter, r *http.Request) (int64, bool) {
+func userId(w http.ResponseWriter, r *http.Request) (int64, bool) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil || id < 1 {
 		writeError(w, http.StatusBadRequest, "validation_error", "用户 ID 必须为正整数")

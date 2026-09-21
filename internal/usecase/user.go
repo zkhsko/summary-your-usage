@@ -53,7 +53,7 @@ func (u *User) Update(ctx context.Context, id int64, input entity.UserInput) (en
 		return entity.User{}, err
 	}
 	return u.repo.Update(ctx, entity.User{
-		ID:        id,
+		Id:        id,
 		Name:      input.Name,
 		Email:     input.Email,
 		UpdatedAt: time.Now().UTC().Truncate(time.Microsecond),

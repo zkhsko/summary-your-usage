@@ -10,14 +10,11 @@ import (
 	sqlite3 "modernc.org/sqlite/lib"
 
 	"summary-your-usage/internal/entity"
-	"summary-your-usage/internal/usecase"
 )
 
 type User struct {
 	db *sql.DB
 }
-
-var _ usecase.UserRepository = (*User)(nil)
 
 func NewUser(db *sql.DB) *User {
 	return &User{db: db}
@@ -32,7 +29,7 @@ func (r *User) List(ctx context.Context) ([]entity.User, error) {
 	users := []entity.User{}
 	for rows.Next() {
 		var user entity.User
-		if err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		if err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, user)
@@ -43,7 +40,7 @@ func (r *User) List(ctx context.Context) ([]entity.User, error) {
 func (r *User) Get(ctx context.Context, id int64) (entity.User, error) {
 	var user entity.User
 	err := r.db.QueryRowContext(ctx, "SELECT id, name, email, created_at, updated_at FROM users WHERE id = ?", id).
-		Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+		Scan(&user.Id, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
 	return user, userError(err)
 }
 
@@ -53,18 +50,18 @@ func (r *User) Create(ctx context.Context, user entity.User) (entity.User, error
 	if err != nil {
 		return entity.User{}, userError(err)
 	}
-	user.ID, err = result.LastInsertId()
+	user.Id, err = result.LastInsertId()
 	return user, err
 }
 
 func (r *User) Update(ctx context.Context, user entity.User) (entity.User, error) {
 	_, err := r.db.ExecContext(ctx, "UPDATE users SET name = ?, email = ?, updated_at = ? WHERE id = ?",
-		user.Name, user.Email, user.UpdatedAt, user.ID)
+		user.Name, user.Email, user.UpdatedAt, user.Id)
 	if err != nil {
 		return entity.User{}, userError(err)
 	}
 	// 回读也能正确处理 MySQL 更新相同值时 RowsAffected 为 0 的情况。
-	return r.Get(ctx, user.ID)
+	return r.Get(ctx, user.Id)
 }
 
 func (r *User) Delete(ctx context.Context, id int64) error {

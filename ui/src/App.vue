@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, reactive, ref } from 'vue'
+import { nextTick, onMounted, reactive, ref } from 'vue'
 import {
   ElAside, ElAvatar, ElButton, ElCard, ElConfigProvider, ElContainer,
   ElDialog, ElEmpty, ElForm, ElFormItem, ElHeader, ElInput, ElMain,
@@ -10,17 +10,6 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import { usersApi } from './api/users'
 
 const currentView = ref('console')
-const activeTopNav = computed(() => (currentView.value === 'console' ? 'console' : ''))
-const activeSideNav = computed(() => (currentView.value === 'users' ? 'users' : ''))
-
-function handleTopNavSelect(index) {
-  currentView.value = index
-}
-
-function handleSideNavSelect(index) {
-  currentView.value = index
-}
-
 const users = ref([])
 const busy = ref(false)
 const dialogVisible = ref(false)
@@ -58,7 +47,7 @@ async function openForm(user) {
 async function saveUser() {
   if (busy.value || !formRef.value) return
   form.name = form.name.trim()
-  form.email = form.email.trim().toLowerCase()
+  form.email = form.email.trim()
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid || busy.value) return
   busy.value = true
@@ -108,9 +97,9 @@ onMounted(loadUsers)
             <el-menu
               mode="horizontal"
               :ellipsis="false"
-              :default-active="activeTopNav"
+              :default-active="currentView"
               style="border-bottom: none; background: transparent;"
-              @select="handleTopNavSelect"
+              @select="currentView = $event"
             >
               <el-menu-item index="console">控制台</el-menu-item>
             </el-menu>
@@ -123,9 +112,9 @@ onMounted(loadUsers)
         <el-aside width="200px" style="border-right: 1px solid var(--el-border-color-light);">
           <el-scrollbar>
             <el-menu
-              :default-active="activeSideNav"
+              :default-active="currentView"
               style="border-right: none;"
-              @select="handleSideNavSelect"
+              @select="currentView = $event"
             >
               <el-menu-item index="users">用户管理</el-menu-item>
             </el-menu>
@@ -165,7 +154,6 @@ onMounted(loadUsers)
               v-model="dialogVisible"
               :title="editingId === null ? '新增用户' : '编辑用户'"
               width="min(420px, calc(100vw - 32px))"
-              destroy-on-close
               :close-on-click-modal="!busy"
               :close-on-press-escape="!busy"
               :show-close="!busy"
