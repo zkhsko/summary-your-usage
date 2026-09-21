@@ -1,12 +1,12 @@
 <script setup>
+import { useRoute } from 'vue-router'
 import {
   ElAside, ElAvatar, ElConfigProvider, ElContainer, ElHeader, ElMain,
   ElMenu, ElRow, ElScrollbar, ElSpace, ElText,
 } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
-defineProps({ activeView: { type: String, required: true } })
-defineEmits(['select'])
+const route = useRoute()
 </script>
 
 <template>
@@ -28,9 +28,9 @@ defineEmits(['select'])
         <el-aside width="200px" style="border-right: 1px solid var(--el-border-color-light);">
           <el-scrollbar>
             <el-menu
-              :default-active="activeView"
+              :default-active="route.path"
+              router
               style="border-right: none;"
-              @select="$emit('select', $event)"
             >
               <slot name="sidebar-menu" />
             </el-menu>

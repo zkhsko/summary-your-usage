@@ -1,23 +1,18 @@
 <script setup>
-import { ref } from 'vue'
+import { RouterLink, RouterView } from 'vue-router'
 import { ElButton, ElMenuItem } from 'element-plus'
 import AppLayout from './framework/AppLayout.vue'
-import OverviewPage from './features/dashboard/OverviewPage.vue'
-import UsersPage from './features/users/UsersPage.vue'
-
-const currentView = ref('dashboard/overview')
 </script>
 
 <template>
-  <app-layout :active-view="currentView" @select="currentView = $event">
+  <app-layout>
     <template #header-menu>
-      <el-button text @click="currentView = 'dashboard/overview'">控制台</el-button>
+      <el-button :tag="RouterLink" to="/dashboard/overview" text>控制台</el-button>
     </template>
     <template #sidebar-menu>
-      <el-menu-item index="users">用户管理</el-menu-item>
+      <el-menu-item index="/users">用户管理</el-menu-item>
     </template>
 
-    <overview-page v-if="currentView === 'dashboard/overview'" />
-    <users-page v-else-if="currentView === 'users'" />
+    <router-view />
   </app-layout>
 </template>
