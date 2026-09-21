@@ -1,7 +1,7 @@
 export async function request(path, options = {}) {
   let response
   try {
-    response = await fetch(`/api/v1${path}`, {
+    response = await fetch(`/ui-api${path}`, {
       ...options,
       headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
     })

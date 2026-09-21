@@ -37,7 +37,7 @@ func Run(ctx context.Context, cfg config.Config) error {
 
 	users := usecase.NewUser(persistent.NewUser(db))
 	router := httpcontroller.NewRouter(users)
-	router.Handle("/*", ui.Handler())
+	router.Mount("/ui", http.StripPrefix("/ui", ui.Handler()))
 
 	server := &http.Server{
 		Addr:              cfg.HTTPAddr(),
@@ -53,7 +53,7 @@ func Run(ctx context.Context, cfg config.Config) error {
 	}
 	serveErr := make(chan error, 1)
 	go func() { serveErr <- server.Serve(listener) }()
-	log.Printf("服务已启动：http://%s", server.Addr)
+	log.Printf("服务已启动：http://%s/ui/", server.Addr)
 
 	select {
 	case err := <-serveErr:

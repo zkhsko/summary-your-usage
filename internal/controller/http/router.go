@@ -14,7 +14,7 @@ func NewRouter(users *usecase.User) *chi.Mux {
 	r.Use(middleware.Recoverer)
 
 	h := &userHandler{users: users}
-	r.Route("/api/v1", func(r chi.Router) {
+	r.Route("/ui-api", func(r chi.Router) {
 		r.Get("/users", h.list)
 		r.Post("/users", h.create)
 		r.Get("/users/{id}", h.get)

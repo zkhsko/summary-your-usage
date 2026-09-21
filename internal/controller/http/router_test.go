@@ -72,18 +72,18 @@ func assertError(t *testing.T, response *httptest.ResponseRecorder, code string)
 func TestUserCRUDAndPersistence(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "users.db")
 	api, db := openAPI(t, path)
-	empty := decode[[]entity.User](t, request(t, api, "GET", "/api/v1/users", "", 200))
+	empty := decode[[]entity.User](t, request(t, api, "GET", "/ui-api/users", "", 200))
 	if empty == nil || len(empty) != 0 {
 		t.Fatalf("unexpected empty list: %+v", empty)
 	}
-	created := request(t, api, "POST", "/api/v1/users", `{"name":"  张三  ","email":"  Alice@Example.COM  "}`, 201)
+	created := request(t, api, "POST", "/ui-api/users", `{"name":"  张三  ","email":"  Alice@Example.COM  "}`, 201)
 	user := decode[entity.User](t, created)
-	userPath := fmt.Sprintf("/api/v1/users/%d", user.Id)
+	userPath := fmt.Sprintf("/ui-api/users/%d", user.Id)
 	if user.Id < 1 || user.Name != "张三" || user.Email != "alice@example.com" || user.CreatedAt.IsZero() || !user.CreatedAt.Equal(user.UpdatedAt) {
 		t.Fatalf("unexpected created user: %+v", user)
 	}
-	assertError(t, request(t, api, "POST", "/api/v1/users", `{"name":"重复","email":"ALICE@example.com"}`, 409), "email_exists")
-	other := decode[entity.User](t, request(t, api, "POST", "/api/v1/users", `{"name":"李四","email":"bob@example.com"}`, 201))
+	assertError(t, request(t, api, "POST", "/ui-api/users", `{"name":"重复","email":"ALICE@example.com"}`, 409), "email_exists")
+	other := decode[entity.User](t, request(t, api, "POST", "/ui-api/users", `{"name":"李四","email":"bob@example.com"}`, 201))
 	assertError(t, request(t, api, "PUT", userPath, `{"name":"不应保存","email":"BOB@example.com"}`, 409), "email_exists")
 	unchanged := decode[entity.User](t, request(t, api, "GET", userPath, "", 200))
 	if unchanged != user {
@@ -108,7 +108,7 @@ func TestUserCRUDAndPersistence(t *testing.T) {
 	for _, method := range []string{"GET", "PUT", "DELETE"} {
 		assertError(t, request(t, api, method, userPath, `{"name":"不存在","email":"missing@example.com"}`, 404), "user_not_found")
 	}
-	remaining := decode[[]entity.User](t, request(t, api, "GET", "/api/v1/users", "", 200))
+	remaining := decode[[]entity.User](t, request(t, api, "GET", "/ui-api/users", "", 200))
 	if len(remaining) != 1 || remaining[0].Id != other.Id {
 		t.Fatalf("unexpected remaining users: %+v", remaining)
 	}
@@ -120,31 +120,31 @@ func TestInvalidRequests(t *testing.T) {
 		name, method, path, body, code string
 		status                         int
 	}{
-		{"missing fields", "POST", "/api/v1/users", `{}`, "validation_error", 400},
-		{"blank name", "POST", "/api/v1/users", `{"name":"  ","email":"a@example.com"}`, "validation_error", 400},
-		{"long name", "POST", "/api/v1/users", `{"name":"` + strings.Repeat("张", 101) + `","email":"a@example.com"}`, "validation_error", 400},
-		{"invalid email", "POST", "/api/v1/users", `{"name":"Alice","email":"invalid"}`, "validation_error", 400},
-		{"empty JSON", "POST", "/api/v1/users", "", "invalid_json", 400},
-		{"malformed JSON", "POST", "/api/v1/users", `{`, "invalid_json", 400},
-		{"unknown field", "POST", "/api/v1/users", `{"name":"Alice","email":"a@example.com","admin":true}`, "invalid_json", 400},
-		{"wrong type", "POST", "/api/v1/users", `{"name":42,"email":"a@example.com"}`, "invalid_json", 400},
-		{"multiple values", "POST", "/api/v1/users", `{"name":"Alice","email":"a@example.com"} {}`, "invalid_json", 400},
-		{"trailing garbage", "POST", "/api/v1/users", `{"name":"Alice","email":"a@example.com"} invalid`, "invalid_json", 400},
-		{"oversized body", "POST", "/api/v1/users", `{"name":"` + strings.Repeat("a", 1<<20) + `","email":"a@example.com"}`, "body_too_large", 413},
-		{"invalid update", "PUT", "/api/v1/users/1", `{}`, "validation_error", 400},
-		{"zero ID", "GET", "/api/v1/users/0", "", "validation_error", 400},
-		{"negative ID", "DELETE", "/api/v1/users/-1", "", "validation_error", 400},
-		{"invalid ID", "GET", "/api/v1/users/abc", "", "validation_error", 400},
-		{"overflow ID", "GET", "/api/v1/users/9223372036854775808", "", "validation_error", 400},
-		{"unknown route", "GET", "/api/v1/missing", "", "not_found", 404},
-		{"unsupported method", "PATCH", "/api/v1/users/1", "", "method_not_allowed", 405},
+		{"missing fields", "POST", "/ui-api/users", `{}`, "validation_error", 400},
+		{"blank name", "POST", "/ui-api/users", `{"name":"  ","email":"a@example.com"}`, "validation_error", 400},
+		{"long name", "POST", "/ui-api/users", `{"name":"` + strings.Repeat("张", 101) + `","email":"a@example.com"}`, "validation_error", 400},
+		{"invalid email", "POST", "/ui-api/users", `{"name":"Alice","email":"invalid"}`, "validation_error", 400},
+		{"empty JSON", "POST", "/ui-api/users", "", "invalid_json", 400},
+		{"malformed JSON", "POST", "/ui-api/users", `{`, "invalid_json", 400},
+		{"unknown field", "POST", "/ui-api/users", `{"name":"Alice","email":"a@example.com","admin":true}`, "invalid_json", 400},
+		{"wrong type", "POST", "/ui-api/users", `{"name":42,"email":"a@example.com"}`, "invalid_json", 400},
+		{"multiple values", "POST", "/ui-api/users", `{"name":"Alice","email":"a@example.com"} {}`, "invalid_json", 400},
+		{"trailing garbage", "POST", "/ui-api/users", `{"name":"Alice","email":"a@example.com"} invalid`, "invalid_json", 400},
+		{"oversized body", "POST", "/ui-api/users", `{"name":"` + strings.Repeat("a", 1<<20) + `","email":"a@example.com"}`, "body_too_large", 413},
+		{"invalid update", "PUT", "/ui-api/users/1", `{}`, "validation_error", 400},
+		{"zero ID", "GET", "/ui-api/users/0", "", "validation_error", 400},
+		{"negative ID", "DELETE", "/ui-api/users/-1", "", "validation_error", 400},
+		{"invalid ID", "GET", "/ui-api/users/abc", "", "validation_error", 400},
+		{"overflow ID", "GET", "/ui-api/users/9223372036854775808", "", "validation_error", 400},
+		{"unknown route", "GET", "/ui-api/missing", "", "not_found", 404},
+		{"unsupported method", "PATCH", "/ui-api/users/1", "", "method_not_allowed", 405},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			assertError(t, request(t, api, tc.method, tc.path, tc.body, tc.status), tc.code)
 		})
 	}
 	t.Run("content type", func(t *testing.T) {
-		req := httptest.NewRequest("POST", "/api/v1/users", strings.NewReader(`{"name":"Alice","email":"a@example.com"}`))
+		req := httptest.NewRequest("POST", "/ui-api/users", strings.NewReader(`{"name":"Alice","email":"a@example.com"}`))
 		req.Header.Set("Content-Type", "text/plain")
 		response := httptest.NewRecorder()
 		api.ServeHTTP(response, req)
@@ -153,7 +153,7 @@ func TestInvalidRequests(t *testing.T) {
 		}
 		assertError(t, response, "unsupported_media_type")
 	})
-	users := decode[[]entity.User](t, request(t, api, "GET", "/api/v1/users", "", 200))
+	users := decode[[]entity.User](t, request(t, api, "GET", "/ui-api/users", "", 200))
 	if len(users) != 0 {
 		t.Fatalf("invalid requests created users: %+v", users)
 	}
