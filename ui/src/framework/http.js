@@ -1,7 +1,7 @@
-async function request(path = '', options = {}) {
+export async function request(path, options = {}) {
   let response
   try {
-    response = await fetch(`/api/v1/users${path}`, {
+    response = await fetch(`/api/v1${path}`, {
       ...options,
       headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
     })
@@ -13,11 +13,4 @@ async function request(path = '', options = {}) {
     throw new Error(body?.error?.message || '请求失败，请稍后重试')
   }
   if (response.status !== 204) return response.json()
-}
-
-export const usersApi = {
-  list: () => request(),
-  create: input => request('', { method: 'POST', body: JSON.stringify(input) }),
-  update: (id, input) => request(`/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
-  delete: id => request(`/${id}`, { method: 'DELETE' }),
 }
