@@ -26,7 +26,7 @@ func TestHandler(t *testing.T) {
 		t.Fatalf("unexpected index response: %d %s", index.Code, index.Body)
 	}
 	for _, target := range []string{
-		"/ui/users", "/ui/dashboard/overview", "/ui/users/", "/ui/users?search=alice", "/ui/missing",
+		"/ui/users", "/ui/groups", "/ui/dashboard/overview", "/ui/users/", "/ui/users?search=alice", "/ui/missing",
 	} {
 		t.Run(target, func(t *testing.T) {
 			response := request(http.MethodGet, target)

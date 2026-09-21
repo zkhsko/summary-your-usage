@@ -12,6 +12,7 @@ import AppLayout from './framework/AppLayout.vue'
     <template #sidebar-menu>
       <el-menu-item index="/dashboard/overview">数据看板</el-menu-item>
       <el-menu-item index="/users">用户管理</el-menu-item>
+      <el-menu-item index="/groups">分组管理</el-menu-item>
     </template>
 
     <router-view />

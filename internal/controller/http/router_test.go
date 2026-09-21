@@ -32,7 +32,7 @@ func openAPI(t *testing.T, path string) (http.Handler, *sql.DB) {
 	if _, err := provider.Up(t.Context()); err != nil {
 		t.Fatal(err)
 	}
-	return controller.NewRouter(usecase.NewUser(persistent.NewUser(db))), db
+	return controller.NewRouter(usecase.NewUser(persistent.NewUser(db)), usecase.NewGroup(persistent.NewGroup(db))), db
 }
 
 func request(t *testing.T, handler http.Handler, method, path, body string, status int) *httptest.ResponseRecorder {

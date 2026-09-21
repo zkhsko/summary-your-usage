@@ -36,7 +36,8 @@ func Run(ctx context.Context, cfg config.Config) error {
 	}
 
 	users := usecase.NewUser(persistent.NewUser(db))
-	router := httpcontroller.NewRouter(users)
+	groups := usecase.NewGroup(persistent.NewGroup(db))
+	router := httpcontroller.NewRouter(users, groups)
 	router.Mount("/ui", http.StripPrefix("/ui", ui.Handler()))
 
 	server := &http.Server{
